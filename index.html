@@ -1,0 +1,299 @@
+
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Adoratio — Tabela</title>
+
+<style>
+:root {
+  --wine: #651d2b;
+  --gold: #c6a45b;
+  --paper: #fbf8f1;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  background: linear-gradient(135deg, #21191b, #3b2027);
+  min-height: 100vh;
+  color: #292522;
+}
+
+header {
+  text-align: center;
+  padding: 30px 16px;
+  color: #fff8e9;
+}
+
+.cross {
+  color: var(--gold);
+  font-size: 30px;
+}
+
+h1 {
+  font-weight: normal;
+  letter-spacing: 3px;
+}
+
+main {
+  width: 94%;
+  max-width: 1100px;
+  margin: auto auto 35px;
+  background: var(--paper);
+  border: 1px solid var(--gold);
+  border-radius: 14px;
+  padding: 25px;
+  box-shadow: 0 18px 50px #0005;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+button {
+  border: 0;
+  border-radius: 7px;
+  padding: 11px 15px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.primary {
+  background: var(--wine);
+  color: white;
+}
+
+.secondary {
+  background: #e9dfcb;
+  color: #342820;
+}
+
+.hint {
+  font: 13px/1.5 Arial, sans-serif;
+  color: #6c6259;
+}
+
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid #d8cbb4;
+  border-radius: 8px;
+}
+
+table {
+  width: 100%;
+  min-width: 600px;
+  border-collapse: collapse;
+}
+
+th {
+  background: var(--wine);
+  color: #fff8e9;
+  text-align: left;
+  font-weight: normal;
+}
+
+th, td {
+  padding: 12px;
+  border-bottom: 1px solid #e2d8c8;
+}
+
+tbody tr:nth-child(even) {
+  background: #f3ede2;
+}
+
+td[contenteditable="true"]:focus,
+th[contenteditable="true"]:focus {
+  outline: 2px solid var(--gold);
+  background: #fffdf6;
+}
+
+.delete {
+  background: transparent;
+  color: #8d2636;
+  font-size: 20px;
+}
+
+footer {
+  text-align: center;
+  color: #e4d8c8;
+  padding: 20px;
+}
+
+@media (max-width: 600px) {
+  main { padding: 15px; }
+  h1 { font-size: 25px; }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="cross">✠</div>
+  <h1>ADORATIO</h1>
+  <p>Porządek liturgiczny · Tabela edytowalna</p>
+</header>
+
+<main>
+  <h2 id="tableTitle" contenteditable="true">
+    Godziny Mszy Świętych
+  </h2>
+
+  <p class="hint">
+    Kliknij komórkę, aby edytować jej treść.
+    Zmiany zapisują się automatycznie w tej przeglądarce.
+  </p>
+
+  <div class="toolbar">
+    <button class="primary" id="addRow">＋ Dodaj wiersz</button>
+    <button class="secondary" id="addColumn">＋ Dodaj kolumnę</button>
+    <button class="secondary" id="reset">Przywróć przykład</button>
+  </div>
+
+  <div class="table-wrap">
+    <table id="editableTable">
+      <thead>
+        <tr>
+          <th contenteditable="true">Kościół</th>
+          <th contenteditable="true">Dzień</th>
+          <th contenteditable="true">Godzina</th>
+          <th contenteditable="true">Uwagi</th>
+          <th>Usuń</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr>
+          <td contenteditable="true">Parafia św. Jana</td>
+          <td contenteditable="true">Niedziela</td>
+          <td contenteditable="true">8:00</td>
+          <td contenteditable="true">Msza święta</td>
+          <td><button class="delete">×</button></td>
+        </tr>
+
+        <tr>
+          <td contenteditable="true">Parafia św. Jana</td>
+          <td contenteditable="true">Niedziela</td>
+          <td contenteditable="true">10:00</td>
+          <td contenteditable="true">Suma parafialna</td>
+          <td><button class="delete">×</button></td>
+        </tr>
+
+        <tr>
+          <td contenteditable="true">Kościół Mariacki</td>
+          <td contenteditable="true">Niedziela</td>
+          <td contenteditable="true">12:00</td>
+          <td contenteditable="true">Msza święta</td>
+          <td><button class="delete">×</button></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<footer>
+  Ad maiorem Dei gloriam · Na większą chwałę Bożą
+</footer>
+
+<script>
+const table = document.getElementById("editableTable");
+const storageKey = "adoratio-table-v1";
+
+const initialTable = table.innerHTML;
+const initialTitle =
+  document.getElementById("tableTitle").innerHTML;
+
+function saveTable() {
+  localStorage.setItem(storageKey, JSON.stringify({
+    table: table.innerHTML,
+    title: document.getElementById("tableTitle").innerHTML
+  }));
+}
+
+function bindDeleteButtons() {
+  table.querySelectorAll(".delete").forEach(button => {
+    button.onclick = () => {
+      button.closest("tr").remove();
+      saveTable();
+    };
+  });
+}
+
+document.getElementById("addRow").onclick = () => {
+  const row = table.tBodies[0].insertRow();
+  const columnCount = table.tHead.rows[0].cells.length;
+
+  for (let i = 0; i < columnCount - 1; i++) {
+    const cell = row.insertCell();
+    cell.contentEditable = "true";
+    cell.textContent = i === 0 ? "Nowy wpis" : "—";
+  }
+
+  const actionCell = row.insertCell();
+  actionCell.innerHTML = '<button class="delete">×</button>';
+
+  bindDeleteButtons();
+  saveTable();
+};
+
+document.getElementById("addColumn").onclick = () => {
+  const name = prompt("Podaj nazwę nowej kolumny:");
+
+  if (!name || !name.trim()) return;
+
+  const header = document.createElement("th");
+  header.contentEditable = "true";
+  header.textContent = name.trim();
+
+  const headerRow = table.tHead.rows[0];
+  headerRow.insertBefore(header, headerRow.lastElementChild);
+
+  [...table.tBodies[0].rows].forEach(row => {
+    const cell = row.insertCell(row.cells.length - 1);
+    cell.contentEditable = "true";
+    cell.textContent = "—";
+  });
+
+  saveTable();
+};
+
+document.getElementById("reset").onclick = () => {
+  if (!confirm("Przywrócić przykładową tabelę?")) return;
+
+  table.innerHTML = initialTable;
+  document.getElementById("tableTitle").innerHTML = initialTitle;
+
+  saveTable();
+  bindDeleteButtons();
+};
+
+table.addEventListener("input", saveTable);
+
+document.getElementById("tableTitle")
+  .addEventListener("input", saveTable);
+
+document.querySelector("thead").addEventListener("input", saveTable);
+
+try {
+  const saved = JSON.parse(localStorage.getItem(storageKey));
+
+  if (saved) {
+    table.innerHTML = saved.table;
+    document.getElementById("tableTitle").innerHTML = saved.title;
+  }
+} catch (error) {
+  console.error("Nie udało się wczytać tabeli.", error);
+}
+
+bindDeleteButtons();
+</script>
+
+</body>
+</html>
